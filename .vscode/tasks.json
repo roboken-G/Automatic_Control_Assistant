@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Active File",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "if [ \"${fileExtname}\" = \".py\" ]; then python3 \"${file}\"; elif [ \"${fileExtname}\" = \".cpp\" ]; then if [[ \"${fileBasename}\" == *\"test\"* ]]; then echo \"[INFO] Detected Test File. Running via CMake/CTest...\"; cmake --build build && ctest --test-dir build --output-on-failure; else echo \"[INFO] Compiling & Running Simulation...\"; g++ -std=c++17 -fdiagnostics-color=always -g -I pid_controller \"${file}\" -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"; fi; else echo \"Unsupported file type\"; fi"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}
