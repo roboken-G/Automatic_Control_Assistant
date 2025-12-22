@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "main", "develop", "dev" ]
+  pull_request:
+    branches: [ "master", "main", "develop", "dev" ]
+
+jobs:
+  # ジョブ1: CMake + Google Test (PC/Linux環境でのロジック検証)
+  test-cmake:
+    name: Build & Test (CMake/Linux)
+    runs-on: ubuntu-22.04 # 推奨環境に合わせる
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Configure CMake
+        # ビルドディレクトリ(build)を作成し、設定を行う
+        run: cmake -B build -S .
+
+      - name: Build
+        # コンパイル実行
+        run: cmake --build build
+
+      - name: Run Tests
+        # テスト実行 (--output-on-failure で失敗時のログを表示)
+        run: cd build && ctest --output-on-failure
