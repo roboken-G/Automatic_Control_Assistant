@@ -29,11 +29,10 @@ jobs:
         version: latest
         platform: x64
 
-    - name: Compile Test Runner
-      # ディレクトリ構造に合わせてパスを調整してください
-      # 例: lib/AutomaticControlAssistant/TargetBasedOnTime.cpp など
+    - name: Configure and Build with CMake
       run: |
-        g++ -std=c++17 -Wall -Wextra test/test_target_based_on_time.cpp TargetBasedOnTime.cpp -o test_runner
+        cmake -S . -B build
+        cmake --build build -j$(nproc)
 
     - name: Run Unit Tests
-      run: ./test_runner
+      run: ./build/run_tests
