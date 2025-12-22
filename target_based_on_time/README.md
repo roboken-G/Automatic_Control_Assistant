@@ -16,13 +16,12 @@
   - [コンストラクタ](#コンストラクタ)
     - [TargetBasedOnTime::TargetBasedOnTime()](#targetbasedontimetargetbasedontime)
   - [関数](#関数)
-    - [TargetBasedOnTime::set(float, float, float, float, float, float)](#targetbasedontimesetfloat-float-float-float-float-float)
-    - [TargetBasedOnTime::set(float, float, float, float)](#targetbasedontimesetfloat-float-float-float)
-    - [TargetBasedOnTime::set(float, float, float)](#targetbasedontimesetfloat-float-float)
-    - [TargetBasedOnTime::setTarget(float)](#targetbasedontimesettargetfloat)
+    - [TargetBasedOnTime::set(float, float, const MotionProfile&)](#targetbasedontimesetfloat-float-const-motionprofile)
+    - [TargetBasedOnTime::set(float, const MotionProfile&)](#targetbasedontimesetfloat-const-motionprofile)
     - [TargetBasedOnTime::update(uint32_t)](#targetbasedontimeupdateuint32_t)
     - [TargetBasedOnTime::getVelocity()](#targetbasedontimegetvelocity)
     - [TargetBasedOnTime::getPosition()](#targetbasedontimegetposition)
+    - [TargetBasedOnTime::getAcceleration()](#targetbasedontimegetacceleration)
     - [TargetBasedOnTime::getTimeRequired()](#targetbasedontimegettimerequired)
 
 ## コンストラクタ
@@ -39,73 +38,52 @@
 ## 関数
 
 ##### TargetBasedOnTime::set(float, float, float, float, float, float)
-> ```c++
-> void set(
->     float targetPosition,
->     float initialPosition,
->     float maxAcceleration,
->     float maxVelocity,
->     float firstVelocity,
->     float finalVelocity
-> );
-> ```
-> 目標位置、現在位置、最大加速度、最大速度、初期速度、最終速度を設定します。
-> ```c++
-> // 例
-> arm.set(150, 50, 25, 50, 20, 10);
-> ```
+このオーバーロードは現行実装では廃止されています。代わりに `MotionProfile` 構造体を用いる以下の関数を使用してください。
 
-##### TargetBasedOnTime::set(float, float, float, float)
-> ```c++
-> void set(
->     float targetPosition,
->     float initialPosition,
->     float maxAcceleration,
->     float maxVelocity
-> );
-> ```
-> 初期速度、最終速度を0とし、目標位置、現在位置、最大加速度、最大速度を設定します。  
-> ```c++
-> // 例
-> arm.set(150, 50, 25, 50);
-> ```
+→ 新API: [TargetBasedOnTime::set(float, float, const MotionProfile&)](#targetbasedontimesetfloat-float-const-motionprofile)
 
-##### TargetBasedOnTime::set(float, float, float)
-> ```c++
-> void set(
->     float targetPositionDistance,
->     float maxAcceleration,
->     float maxVelocity
-> );
-> ```
-> 現在位置を0とし、 `TargetBasedOnTime::set(float, float, float, float)` を実行します。  
-> ```c++
-> // 例
-> arm.set(100, 25, 50);
-> ```
+##### TargetBasedOnTime::set(float, float, const MotionProfile&)
+```c++
+void set(
+  float targetPosition,
+  float initialPosition,
+  const aca::MotionProfile& profile
+);
+```
+目標位置（絶対座標）と初期位置（絶対座標）を `MotionProfile` とともに設定します。
+```c++
+aca::TargetBasedOnTime arm;
+aca::MotionProfile prof{ /*maxAcceleration=*/25.0f, /*maxVelocity=*/50.0f };
+prof.firstVelocity = 20.0f;
+prof.finalVelocity = 10.0f;
+arm.set(150.0f, 50.0f, prof);
+```
+
+##### TargetBasedOnTime::set(float, const MotionProfile&)
+```c++
+void set(
+  float targetPositionDistance,
+  const aca::MotionProfile& profile
+);
+```
+現在位置を0とする相対距離で設定します。
+```c++
+aca::MotionProfile prof{25.0f, 50.0f};
+arm.set(100.0f, prof); // 0 → +100
+```
 
 ##### TargetBasedOnTime::setTarget(float)
-> ```c++
-> void setTarget(
->     float targetPosition
-> );
-> ```
-> 現在位置を0とし、目標位置を設定します。  
-> 最大加速度、最大速度はそのままです。
-> ```c++
-> // 例
-> arm.setTarget(100);
-> ```
+この関数は現行実装では廃止されています。相対距離での設定は `set(float, const MotionProfile&)` を使用してください。
 
 ##### TargetBasedOnTime::update(uint32_t)
-> ```c++
-> void update(uint32_t time);
-> ```
-> 渡された時間を元に、 `velocity` と `position` を更新します。  
-> ```c++
-> // 例
-> arm.update(100);
-> ```
+```c++
+aca::ControlStatus update(uint32_t time_ms);
+```
+渡された経過時間[ms]時点の状態を計算し，`position`・`velocity`・`acceleration`・`isFinished` を含む `ControlStatus` を返します。
+```c++
+auto st = arm.update(100);
+// st.position, st.velocity, st.acceleration, st.isFinished
+```
 
 ##### TargetBasedOnTime::getVelocity()
 > ```c++
@@ -125,6 +103,16 @@
 > ```c++
 > // 例
 > arm.getPosition();
+> ```
+
+##### TargetBasedOnTime::getAcceleration()
+> ```c++
+> float getAcceleration();
+> ```
+> `acceleration` を返します。  
+> ```c++
+> // 例
+> arm.getAcceleration();
 > ```
 
 ##### TargetBasedOnTime::getTimeRequired()
