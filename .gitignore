@@ -1,1 +1,31 @@
-﻿build
+﻿# --- Build Output ---
+# CMakeのビルド生成物はすべてここに入るので、ディレクトリごと除外
+build
+build/
+
+# --- Executables (Linux/Mac) ---
+# タスクランナー等でソースコードと同じ場所に生成されてしまった実行ファイル
+# (拡張子がないファイルを特定して除外)
+simulation/simulate_comparison
+simulation/simulate_safe_tuning
+simulation/simulate_gravity
+test/test_pid
+
+# --- Executables (Windows) ---
+*.exe
+*.dll
+*.obj
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+
+# --- Data & Logs ---
+# シミュレーション結果のCSVや画像も、必要なければ除外
+*.csv
+*.png
+*.log
+
+# --- OS / Editor ---
+.DS_Store
+.vscode/ipch/
