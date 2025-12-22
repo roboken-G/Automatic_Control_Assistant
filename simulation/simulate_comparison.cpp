@@ -38,7 +38,8 @@ int main() {
         .ki = 80.0f, 
         .kd = 1.0f,
         .min_output = -24.0f, 
-        .max_output = 24.0f
+        .max_output = 24.0f,
+        .max_delta_output = 10.0f
     };
     aca::PidController single_pid(single_gain);
 
@@ -48,7 +49,8 @@ int main() {
         .vel_kp = 1.0f,
         .vel_ki = 1.0f,
         .max_speed = 30.0f,
-        .max_output = 24.0f
+        .max_output = 24.0f,
+        .max_delta_output = 10.0f
     };
     aca::CascadePidController cascade_pid(cascade_gain);
 

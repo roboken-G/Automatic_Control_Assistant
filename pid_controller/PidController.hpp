@@ -22,6 +22,7 @@ struct PidGain {
     float kd;               ///< 微分ゲイン
     float min_output;       ///< 出力下限
     float max_output;       ///< 出力上限
+    float max_delta_output; ///< 出力変化量上限 (0以下で制限なし)
     float tau = 0.02f;      ///< D項フィルタ時定数 (デフォルト 0.02s)
 };
 
@@ -118,13 +119,18 @@ public:
 
         float output = p_out + i_out + d_out;
 
-        // --- 2. 出力制限 & アンチワインドアップ ---
+        // --- 2. 出力制限 & 出力変化量制限 & アンチワインドアップ ---
         if (output > gain_.max_output) {
             output = gain_.max_output;
         } else if (output < gain_.min_output) {
             output = gain_.min_output;
         } else {
             integral_ += error * dt; // 飽和していない場合のみ積分更新
+        }
+        if (gain_.max_delta_output > 0.0f) {
+            float delta_output = output - prev_output_;
+            delta_output = std::clamp(delta_output, -gain_.max_delta_output, gain_.max_delta_output);
+            output = prev_output_ + delta_output;
         }
 
         // --- 3. 状態更新 ---

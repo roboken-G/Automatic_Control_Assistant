@@ -20,6 +20,7 @@ struct CascadeGain {
     float vel_ki;       ///< 速度ループ積分ゲイン
     float max_speed;    ///< 最大速度制限 (位置ループ上限)
     float max_output;   ///< 最大出力制限 (速度ループ上限)
+    float max_delta_output; ///< 出力変化量上限 (0以下で制限なし)
 };
 
 /**
@@ -60,7 +61,7 @@ public:
         : pos_pid_({ .kp = gain.pos_kp, .ki = 0.0f, .kd = 0.0f, 
                      .min_output = -gain.max_speed, .max_output = gain.max_speed }),
           vel_pid_({ .kp = gain.vel_kp, .ki = gain.vel_ki, .kd = 0.0f, 
-                     .min_output = -gain.max_output, .max_output = gain.max_output }),
+                     .min_output = -gain.max_output, .max_output = gain.max_output, .max_delta_output = gain.max_delta_output }),
           max_output_(gain.max_output) // リミット値を保存
     {}
 
