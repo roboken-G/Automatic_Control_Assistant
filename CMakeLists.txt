@@ -1,15 +1,24 @@
 cmake_minimum_required(VERSION 3.14)
-project(PidControllerLibrary)
+project(AutomaticControlAssistant)
 
 # C++20 (指定付き初期化子対応のため必須)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --------------------------------------------------------
-# 1. ライブラリ定義 (Header-only)
+# 1. ライブラリ定義
 # --------------------------------------------------------
+# (Header-only)
 add_library(PidController INTERFACE)
 target_include_directories(PidController INTERFACE pid_controller)
+# (Static Library)
+add_library(TargetBasedOnTime STATIC
+    target_based_on_time/target_based_on_time.cpp
+    target_based_on_time/target_based_on_time.hpp
+)
+target_include_directories(TargetBasedOnTime PUBLIC 
+    "${CMAKE_CURRENT_SOURCE_DIR}/target_based_on_time"
+)
 
 # --------------------------------------------------------
 # 2. テスト設定 (Google Test)
@@ -39,7 +48,11 @@ if(BUILD_TESTS)
     if(TEST_SOURCES)
         # すべてのテストコードを1つの実行ファイルにまとめる
         add_executable(run_tests ${TEST_SOURCES})
-        target_link_libraries(run_tests PRIVATE PidController GTest::gtest_main)
+        target_link_libraries(run_tests PRIVATE 
+            PidController 
+            TargetBasedOnTime 
+            GTest::gtest_main
+        )
 
         include(GoogleTest)
         gtest_discover_tests(run_tests)
@@ -64,8 +77,11 @@ if(BUILD_SIMULATION)
         add_executable(${target_name} ${source_file})
         
         # ライブラリのリンク
-        target_link_libraries(${target_name} PRIVATE PidController)
-        
+        target_link_libraries(${target_name} PRIVATE 
+            PidController 
+            TargetBasedOnTime
+        )
+                
         message(STATUS "Added simulation target: ${target_name}")
     endforeach()
 endif()

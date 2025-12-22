@@ -1,0 +1,38 @@
+name: Test ACA Trajectory (TargetBasedOnTime)
+
+on:
+  push:
+    branches: [ "master", "main", "develop", "dev" ]
+    # 以下のパス以下のファイルが変更されたときのみ実行するフィルタ
+    paths:
+      - 'target_based_on_time/**'                         # ライブラリ本体のパス
+      - 'test/**'                                         # テストコードのパス
+      - '.github/workflows/test_target_based_on_time.yml' # このワークフロー自体の変更
+  pull_request:
+    branches: [ "master", "main", "develop", "dev" ]
+    paths:
+      - 'target_based_on_time/**'                         # ライブラリ本体のパス
+      - 'test/**'                                         # テストコードのパス
+      - '.github/workflows/test_target_based_on_time.yml' # このワークフロー自体の変更
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up GCC
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: latest
+        platform: x64
+
+    - name: Configure and Build with CMake
+      run: |
+        cmake -S . -B build
+        cmake --build build -j$(nproc)
+
+    - name: Run Unit Tests
+      run: ./build/run_tests

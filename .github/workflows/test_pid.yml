@@ -1,10 +1,18 @@
-name: CI
+name: Test Pid Controller
 
 on:
   push:
     branches: [ "master", "main", "develop", "dev" ]
+    paths:
+      - 'pid_controller/**'                         # ライブラリ本体のパス
+      - 'test/**'                                         # テストコードのパス
+      - '.github/workflows/test_pid.yml' # このワークフロー自体の変更
   pull_request:
     branches: [ "master", "main", "develop", "dev" ]
+    paths:
+      - 'pid_controller/**'                         # ライブラリ本体のパス
+      - 'test/**'                                         # テストコードのパス
+      - '.github/workflows/test_pid.yml' # このワークフロー自体の変更
 
 jobs:
   # ジョブ1: CMake + Google Test (PC/Linux環境でのロジック検証)
