@@ -64,6 +64,20 @@ public:
           max_output_(gain.max_output) // リミット値を保存
     {}
 
+    /**
+     * @brief ゲインを動的に変更する（自動調整用）
+     * @param gain 新しいゲイン設定
+     */
+    void set_gains(const CascadeGain& gain) {
+        // 位置PIDの設定更新
+        pos_pid_.set_gains({gain.pos_kp, 0.0f, 0.0f, -gain.max_speed, gain.max_speed});
+        // 速度PIDの設定更新
+        vel_pid_.set_gains({gain.vel_kp, gain.vel_ki, 0.0f, -gain.max_output, gain.max_output});
+        
+        // リミット値なども必要なら更新
+        max_output_ = gain.max_output;
+    }
+
     void set_stability_condition(float threshold, float duration) {
         pos_pid_.set_stability_condition(threshold, duration);
     }
@@ -97,7 +111,7 @@ public:
         float accel_ff_val = ff.ref_acc * inertia;
         float total_output = vel_res.output + accel_ff_val + ff.gravity;
 
-        // ★修正: FF加算後の最終出力に対してリミットをかける
+        // FF加算後の最終出力に対してリミットをかける
         total_output = std::clamp(total_output, -max_output_, max_output_);
 
         return {total_output, pos_res.is_stable};

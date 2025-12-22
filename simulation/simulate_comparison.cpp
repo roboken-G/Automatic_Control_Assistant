@@ -64,9 +64,10 @@ public:
 // ----------------------------------------------------------------------
 int main() {
     // --- シミュレーション条件 ---
-    const float dt = 0.0001f;      // 0.1ms (高精度)
+    const float sim_dt = 0.0001f;      // 0.1ms (高精度)
+    const float ctrl_dt = 0.005f;   // 5ms (制御周期)
     const float sim_time = 5.0f;   // 5秒間
-    const int steps = (int)(sim_time / dt);
+    const int steps = (int)(sim_time / sim_dt);
     
     // 外乱設定
     const float gravity_torque = 5.0f;     // 常にかかる重力
@@ -77,9 +78,9 @@ int main() {
     // 1. Single Loop PID (標準)
     // 重力に耐えるため積分(Ki)を強く設定
     aca::PidGain single_gain = {
-        .kp = 2000.0f, 
-        .ki = 800.0f, 
-        .kd = 15.0f,
+        .kp = 20.0f, 
+        .ki = 80.0f, 
+        .kd = 1.0f,
         .min_output = -24.0f, 
         .max_output = 24.0f
     };
@@ -88,8 +89,8 @@ int main() {
     // 2. Cascade PID (カスケード + FF)
     aca::CascadeGain cascade_gain = {
         .pos_kp = 50.0f,
-        .vel_kp = 200.0f,
-        .vel_ki = 2000.0f,
+        .vel_kp = 1.0f,
+        .vel_ki = 1.0f,
         .max_speed = 30.0f,
         .max_output = 24.0f
     };
@@ -112,8 +113,13 @@ int main() {
     // --- ループ実行 ---
     float target_pos = 10.0f; // 目標位置 [rad]
 
+    float control_timer = 0.0f;
+
+    aca::PidResult res_s;
+    aca::PidResult res_c;
+
     for (int i = 0; i < steps; ++i) {
-        float t = i * dt;
+        float t = i * sim_dt;
         
         // 外乱の計算 (重力 + 3秒後の追加負荷)
         float current_dist = gravity_torque;
@@ -121,29 +127,39 @@ int main() {
             current_dist += step_disturbance;
         }
 
-        // -----------------------------------
-        // 1. Single Loop PID 実行
-        // -----------------------------------
-        auto res_s = single_pid.update(target_pos, model_single.get_position(), dt);
-        model_single.update(res_s.output, current_dist, dt);
+        control_timer += sim_dt;
 
-        // -----------------------------------
-        // 2. Cascade PID 実行
-        // -----------------------------------
-        aca::RobotState state = {
-            .position = model_cascade.get_position(),
-            .velocity = model_cascade.get_velocity()
-        };
-        
-        // フィードフォワード入力 (重力補償のみ有効化)
-        aca::FeedForward ff = {
-            .ref_vel = 0.0f,
-            .ref_acc = 0.0f,
-            .gravity = gravity_ff_volts // ここで重力を支える
-        };
+        if (control_timer >= ctrl_dt) {
+            control_timer = 0.0f;
 
-        auto res_c = cascade_pid.update(target_pos, state, ff, 0.0f, dt);
-        model_cascade.update(res_c.output, current_dist, dt);
+            // -----------------------------------
+            // 1. Single Loop PID 実行
+            // -----------------------------------
+            res_s = single_pid.update(target_pos, model_single.get_position(), ctrl_dt);
+
+            // -----------  ------------------------
+            // 2. Cascade PID 実行
+            // -----------------------------------
+            // 現在のロボット状態
+            aca::RobotState state = {
+                .position = model_cascade.get_position(),
+                .velocity = model_cascade.get_velocity()
+            };
+            
+            // フィードフォワード入力 (重力補償のみ有効化)
+            aca::FeedForward ff = {
+                .ref_vel = 0.0f,
+                .ref_acc = 0.0f,
+                .gravity = gravity_ff_volts // ここで重力を支える
+            };
+
+            res_c = cascade_pid.update(target_pos, state, ff, 0.0f, ctrl_dt);
+        }
+
+        // 1. single PID制御入力で物理モデル更新
+        model_single.update(res_s.output, current_dist, sim_dt);
+        // 2. cascade PID制御入力で物理モデル更新
+        model_cascade.update(res_c.output, current_dist, sim_dt);
 
         // -----------------------------------
         // データ記録 (間引き: 10msごとに出力)
