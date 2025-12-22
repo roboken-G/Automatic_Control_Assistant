@@ -37,11 +37,6 @@
 
 ## 関数
 
-##### TargetBasedOnTime::set(float, float, float, float, float, float)
-このオーバーロードは現行実装では廃止されています。代わりに `MotionProfile` 構造体を用いる以下の関数を使用してください。
-
-→ 新API: [TargetBasedOnTime::set(float, float, const MotionProfile&)](#targetbasedontimesetfloat-float-const-motionprofile)
-
 ##### TargetBasedOnTime::set(float, float, const MotionProfile&)
 ```c++
 void set(
@@ -71,9 +66,6 @@ void set(
 aca::MotionProfile prof{25.0f, 50.0f};
 arm.set(100.0f, prof); // 0 → +100
 ```
-
-##### TargetBasedOnTime::setTarget(float)
-この関数は現行実装では廃止されています。相対距離での設定は `set(float, const MotionProfile&)` を使用してください。
 
 ##### TargetBasedOnTime::update(uint32_t)
 ```c++
