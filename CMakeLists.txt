@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
 project(PidControllerLibrary)
 
-# C++17標準 (ESP32やROS2で一般的)
-set(CMAKE_CXX_STANDARD 17)
+# C++20 (指定付き初期化子対応のため必須)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --------------------------------------------------------
 # 1. ライブラリ定義 (Header-only)
 # --------------------------------------------------------
-# 実装ファイルを持たないインターフェースライブラリとして定義
 add_library(PidController INTERFACE)
-
-# includeディレクトリをインクルードパスとして公開
-# ★修正: ディレクトリ名を include -> pid_controller に変更
 target_include_directories(PidController INTERFACE pid_controller)
 
 # --------------------------------------------------------
@@ -27,7 +23,7 @@ if(BUILD_TESTS)
     include(FetchContent)
     FetchContent_Declare(
       googletest
-      URL https://github.com/google/googletest/archive/refs/heads/main.zip
+      URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
     )
     # Windows環境での警告抑制
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -36,29 +32,40 @@ if(BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     # テスト実行ファイルの作成
-    # ソースファイル名は test/test_pid.cpp を想定
-    add_executable(run_tests test/test_pid.cpp)
+    # testフォルダ内のすべての .cpp ファイルを取得
+    file(GLOB TEST_SOURCES "test/*.cpp")
     
     # ライブラリ本体とGTestをリンク
-    target_link_libraries(run_tests PRIVATE PidController GTest::gtest_main)
+    if(TEST_SOURCES)
+        # すべてのテストコードを1つの実行ファイルにまとめる
+        add_executable(run_tests ${TEST_SOURCES})
+        target_link_libraries(run_tests PRIVATE PidController GTest::gtest_main)
 
-    # ctest コマンドへの自動登録
-    include(GoogleTest)
-    gtest_discover_tests(run_tests)
+        include(GoogleTest)
+        gtest_discover_tests(run_tests)
+    endif()
 endif()
 
 # --------------------------------------------------------
-# 3. シミュレーション設定 (Optional)
+# 3. シミュレーション設定 (Generic Simulation Build)
 # --------------------------------------------------------
-# シミュレーションコードがある場合のみビルド対象にする
 option(BUILD_SIMULATION "Build simulation executable" ON)
 
 if(BUILD_SIMULATION)
-    # ★修正: ファイル名を simulate_comparison.cpp に合わせました
-    set(SIM_SOURCE "simulation/simulate_comparison.cpp")
-    
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${SIM_SOURCE}")
-        add_executable(run_simulation ${SIM_SOURCE})
-        target_link_libraries(run_simulation PRIVATE PidController)
-    endif()
+    # simulationディレクトリ内の .cpp ファイルをすべて取得
+    file(GLOB SIMULATION_SOURCES "simulation/*.cpp")
+
+    foreach(source_file ${SIMULATION_SOURCES})
+        # ファイル名(拡張子なし)を取得 -> これをターゲット名(実行ファイル名)にする
+        # 例: simulation/my_sim.cpp -> my_sim
+        get_filename_component(target_name ${source_file} NAME_WE)
+
+        # 実行ファイルの作成
+        add_executable(${target_name} ${source_file})
+        
+        # ライブラリのリンク
+        target_link_libraries(${target_name} PRIVATE PidController)
+        
+        message(STATUS "Added simulation target: ${target_name}")
+    endforeach()
 endif()

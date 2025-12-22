@@ -103,7 +103,7 @@ int main() {
     DcMotorSystem model_cascade;
 
     // --- CSV出力準備 ---
-    std::ofstream ofs("simulation_result.csv");
+    std::ofstream ofs("build/simulation_result.csv");
     ofs << "time,target,pos_single,vol_single,pos_cascade,vol_cascade" << std::endl;
     ofs << std::fixed << std::setprecision(6);
 

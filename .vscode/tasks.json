@@ -6,8 +6,12 @@
             "type": "shell",
             "command": "bash",
             "args": [
-                "-c",
-                "if [ \"${fileExtname}\" = \".py\" ]; then python3 \"${file}\"; elif [ \"${fileExtname}\" = \".cpp\" ]; then if [[ \"${fileBasename}\" == *\"test\"* ]]; then echo \"[INFO] Detected Test File. Running via CMake/CTest...\"; cmake --build build && ctest --test-dir build --output-on-failure; else echo \"[INFO] Compiling & Running Simulation...\"; g++ -std=c++17 -fdiagnostics-color=always -g -I pid_controller \"${file}\" -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"; fi; else echo \"Unsupported file type\"; fi"
+                ".vscode/run_target.sh",        // 作成したスクリプト
+                "${file}",                      // 引数1: フルパス
+                "${fileBasenameNoExtension}",   // 引数2: 拡張子なしファイル名
+                "${fileDirname}",               // 引数3: ディレクトリ
+                "${fileExtname}",               // 引数4: 拡張子
+                "${workspaceFolder}"            // 引数5: ワークスペースルート
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
